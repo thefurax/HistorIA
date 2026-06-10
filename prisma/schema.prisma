@@ -20,23 +20,23 @@ model Session {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  actors             Actor[]
-  relations          Relation[]
-  regions            Region[]
-  events             Event[]
-  pendingActions     PendingAction[]
-  simulationCriteria SimulationCriteria[]
-  mapChanges         MapChange[]
-  diplomacyMessages  DiplomacyMessage[]
-  intelReports       IntelReport[]
-  projects           Project[]
-  equipmentAssets    EquipmentAsset[]
-  equipmentGoals     EquipmentGoal[]
-  fronts             Front[]
-  mapLayers          SessionMapLayer[]
-  mapFeatures        MapFeature[]
-  provinces          Province[]
-  strategicZones     StrategicZone[]
+  actors              Actor[]
+  relations           Relation[]
+  regions             Region[]
+  events              Event[]
+  pendingActions      PendingAction[]
+  simulationCriteria  SimulationCriteria[]
+  mapChanges          MapChange[]
+  diplomacyMessages   DiplomacyMessage[]
+  intelReports        IntelReport[]
+  projects            Project[]
+  equipmentAssets     EquipmentAsset[]
+  equipmentGoals      EquipmentGoal[]
+  fronts              Front[]
+  mapLayers           SessionMapLayer[]
+  mapFeatures         MapFeature[]
+  provinces           Province[]
+  strategicZones      StrategicZone[]
   infrastructureLinks InfrastructureLink[]
 }
 
@@ -54,20 +54,20 @@ model Actor {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  regions            Region[]
-  events             Event[]
-  targetEvents       Event[]              @relation("TargetActor")
-  pendingActions     PendingAction[]
-  simulationCriteria SimulationCriteria[]
-  diplomacySent      DiplomacyMessage[]   @relation("FromActor")
-  diplomacyReceived  DiplomacyMessage[]   @relation("ToActor")
-  intelReports       IntelReport[]
-  projects           Project[]
-  equipmentAssets    EquipmentAsset[]
-  equipmentGoals     EquipmentGoal[]
-  attackerFronts     Front[]              @relation("AttackerActor")
-  defenderFronts     Front[]              @relation("DefenderActor")
-  mapFeatures        MapFeature[]
+  regions             Region[]
+  events              Event[]
+  targetEvents        Event[]              @relation("TargetActor")
+  pendingActions      PendingAction[]
+  simulationCriteria  SimulationCriteria[]
+  diplomacySent       DiplomacyMessage[]   @relation("FromActor")
+  diplomacyReceived   DiplomacyMessage[]   @relation("ToActor")
+  intelReports        IntelReport[]
+  projects            Project[]
+  equipmentAssets     EquipmentAsset[]
+  equipmentGoals      EquipmentGoal[]
+  attackerFronts      Front[]              @relation("AttackerActor")
+  defenderFronts      Front[]              @relation("DefenderActor")
+  mapFeatures         MapFeature[]
   provincesControlled Province[]           @relation("ControllerActor")
 
   @@index([sessionId])
@@ -137,32 +137,32 @@ model Province {
 }
 
 model StrategicZone {
-  id          String   @id @default(uuid())
-  sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  name        String
-  type        String
-  geometry    Json?
-  properties  Json?
-  visibility  String   @default("public")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name       String
+  type       String
+  geometry   Json?
+  properties Json?
+  visibility String   @default("public")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([sessionId])
 }
 
 model InfrastructureLink {
-  id          String   @id @default(uuid())
-  sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  name        String
-  type        String
-  fromId      String
-  toId        String
-  properties  Json?
-  visibility  String   @default("public")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name       String
+  type       String
+  fromId     String
+  toId       String
+  properties Json?
+  visibility String   @default("public")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([sessionId])
 }
@@ -281,19 +281,19 @@ model DiplomacyMessage {
 }
 
 model IntelReport {
-  id                     String   @id @default(uuid())
-  sessionId              String
-  session                Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  actorId                String
-  actor                  Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
-  title                  String
-  confidence             String
-  sourceQuality          String?
-  description            String
+  id                      String   @id @default(uuid())
+  sessionId               String
+  session                 Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  actorId                 String
+  actor                   Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  title                   String
+  confidence              String
+  sourceQuality           String?
+  description             String
   possibleInterpretations Json?
-  linkedEventId          String?
-  linkedEvent            Event?   @relation(fields: [linkedEventId], references: [id])
-  createdAt              DateTime @default(now())
+  linkedEventId           String?
+  linkedEvent             Event?   @relation(fields: [linkedEventId], references: [id])
+  createdAt               DateTime @default(now())
 
   @@index([sessionId])
   @@index([actorId])
@@ -321,18 +321,18 @@ model Project {
 }
 
 model EquipmentAsset {
-  id                    String   @id @default(uuid())
+  id                    String  @id @default(uuid())
   sessionId             String
-  session               Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session               Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorId               String
-  actor                 Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actor                 Actor   @relation(fields: [actorId], references: [id], onDelete: Cascade)
   category              String
   modelName             String?
   modelFamily           String
-  quantity              Int      @default(0)
-  readiness             Int      @default(50)
+  quantity              Int     @default(0)
+  readiness             Int     @default(50)
   qualityLevel          String?
-  obsoleteLevel         Int      @default(0)
+  obsoleteLevel         Int     @default(0)
   yearIntroduced        Int?
   historicalBaselineMin Int?
   historicalBaselineMax Int?
@@ -343,11 +343,11 @@ model EquipmentAsset {
 }
 
 model EquipmentGoal {
-  id             String   @id @default(uuid())
+  id             String  @id @default(uuid())
   sessionId      String
-  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session        Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorId        String
-  actor          Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  actor          Actor   @relation(fields: [actorId], references: [id], onDelete: Cascade)
   category       String
   modelFamily    String
   targetQuantity Int
@@ -393,47 +393,47 @@ model Front {
 }
 
 model MapPreset {
-  id              String   @id @default(uuid())
-  key             String   @unique
-  name            String
-  description     String?
-  scope           String
-  startDate       String?
-  endDate         String?
-  accuracyLevel   String
-  sourceName      String?
-  sourceLicense   String?
-  sourceUrl       String?
-  attribution     String?
-  payload         Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(uuid())
+  key           String   @unique
+  name          String
+  description   String?
+  scope         String
+  startDate     String?
+  endDate       String?
+  accuracyLevel String
+  sourceName    String?
+  sourceLicense String?
+  sourceUrl     String?
+  attribution   String?
+  payload       Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   mapLayers   SessionMapLayer[]
   mapFeatures MapFeature[]
 }
 
 model SessionMapLayer {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session     Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   mapPresetId String?
   mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
   layerType   String
   name        String
   visibility  String
   payload     Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([sessionId])
   @@index([visibility])
 }
 
 model MapFeature {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session     Session    @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   mapPresetId String?
   mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
   actorId     String?
@@ -446,8 +446,8 @@ model MapFeature {
   properties  Json?
   visibility  String
   confidence  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([sessionId])
   @@index([visibility])

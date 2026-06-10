@@ -1,41 +1,35 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import * as visibilityService from '../src/services/visibility.service';
 
-describe('Visibility Filtering', () => {
-  const actorId = 'actor-1';
+describe('Visibility Rules', () => {
+  const actorId = 'france-id';
 
-  it('should see public events', () => {
-    const event = { title: 'Public', visibility: 'public' };
-    expect(visibilityService.canActorSeeEvent(event, actorId)).toBe(true);
+  it('should allow public and advisor_known visibility', () => {
+    expect(visibilityService.canActorSeeEvent({ visibility: 'public' }, actorId)).toBe(true);
+    expect(visibilityService.canActorSeeEvent({ visibility: 'advisor_known' }, actorId)).toBe(true);
   });
 
-  it('should not see foreign_private events', () => {
-    const event = { title: 'Secret', visibility: 'foreign_private', actorId: 'other-actor' };
-    expect(visibilityService.canActorSeeEvent(event, actorId)).toBe(false);
+  it('should forbid foreign_private, gm_private, and never_reveal_raw even if actorId matches', () => {
+    const forbidden = ['foreign_private', 'gm_private', 'never_reveal_raw'];
+    for (const v of forbidden) {
+      expect(visibilityService.canActorSeeEvent({ visibility: v, actorId }, actorId)).toBe(false);
+      expect(visibilityService.canActorSeeCriteria({ visibility: v, actorId }, actorId)).toBe(false);
+      expect(visibilityService.canActorSeeMapChange({ visibility: v, payload: { actorId } }, actorId)).toBe(false);
+    }
   });
 
-  it('should see its own player_private events', () => {
-    const event = { title: 'Private', visibility: 'player_private', actorId };
-    expect(visibilityService.canActorSeeEvent(event, actorId)).toBe(true);
+  it('should allow actor:<actorId> specifically for that actor', () => {
+    expect(visibilityService.canActorSeeEvent({ visibility: `actor:${actorId}` }, actorId)).toBe(true);
+    expect(visibilityService.canActorSeeEvent({ visibility: `actor:germany-id` }, actorId)).toBe(false);
   });
 
-  it('should see public map changes', () => {
-    const mc = { visibility: 'public' };
-    expect(visibilityService.canActorSeeMapChange(mc, actorId)).toBe(true);
+  it('should allow player_private only for the owner', () => {
+    expect(visibilityService.canActorSeeEvent({ visibility: 'player_private', actorId }, actorId)).toBe(true);
+    expect(visibilityService.canActorSeeEvent({ visibility: 'player_private', actorId: 'germany-id' }, actorId)).toBe(false);
   });
 
-  it('should see map changes specifically for the actor', () => {
-    const mc = { visibility: `actor:${actorId}` };
-    expect(visibilityService.canActorSeeMapChange(mc, actorId)).toBe(true);
-  });
-
-  it('should see map changes if payload contains actorId', () => {
-    const mc = { visibility: 'private', payload: { actorId } };
-    expect(visibilityService.canActorSeeMapChange(mc, actorId)).toBe(true);
-  });
-
-  it('should not see gm_private criteria', () => {
-    const criteria = { visibility: 'gm_private' };
-    expect(visibilityService.canActorSeeCriteria(criteria, actorId)).toBe(false);
+  it('should allow mapChange if actorId is in payload', () => {
+    expect(visibilityService.canActorSeeMapChange({ visibility: 'some-v', payload: { actorId } }, actorId)).toBe(true);
+    expect(visibilityService.canActorSeeMapChange({ visibility: 'some-v', payload: { actorId: 'other' } }, actorId)).toBe(false);
   });
 });
