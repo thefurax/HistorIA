@@ -199,19 +199,19 @@ model DiplomacyMessage {
 }
 
 model IntelReport {
-  id                     String   @id @default(uuid())
-  sessionId              String
-  session                Session  @relation(fields: [sessionId], references: [id])
-  actorId                String
-  actor                  Actor    @relation(fields: [actorId], references: [id])
-  title                  String
-  confidence             String
-  sourceQuality          String?
-  description            String
+  id                      String   @id @default(uuid())
+  sessionId               String
+  session                 Session  @relation(fields: [sessionId], references: [id])
+  actorId                 String
+  actor                   Actor    @relation(fields: [actorId], references: [id])
+  title                   String
+  confidence              String
+  sourceQuality           String?
+  description             String
   possibleInterpretations Json?
-  linkedEventId          String?
-  linkedEvent            Event?   @relation(fields: [linkedEventId], references: [id])
-  createdAt              DateTime @default(now())
+  linkedEventId           String?
+  linkedEvent             Event?   @relation(fields: [linkedEventId], references: [id])
+  createdAt               DateTime @default(now())
 }
 
 model Project {
@@ -233,18 +233,18 @@ model Project {
 }
 
 model EquipmentAsset {
-  id                    String   @id @default(uuid())
+  id                    String  @id @default(uuid())
   sessionId             String
-  session               Session  @relation(fields: [sessionId], references: [id])
+  session               Session @relation(fields: [sessionId], references: [id])
   actorId               String
-  actor                 Actor    @relation(fields: [actorId], references: [id])
+  actor                 Actor   @relation(fields: [actorId], references: [id])
   category              String
   modelName             String?
   modelFamily           String
-  quantity              Int      @default(0)
-  readiness             Int      @default(50)
+  quantity              Int     @default(0)
+  readiness             Int     @default(50)
   qualityLevel          String?
-  obsoleteLevel         Int      @default(0)
+  obsoleteLevel         Int     @default(0)
   yearIntroduced        Int?
   historicalBaselineMin Int?
   historicalBaselineMax Int?
@@ -252,11 +252,11 @@ model EquipmentAsset {
 }
 
 model EquipmentGoal {
-  id             String   @id @default(uuid())
+  id             String  @id @default(uuid())
   sessionId      String
-  session        Session  @relation(fields: [sessionId], references: [id])
+  session        Session @relation(fields: [sessionId], references: [id])
   actorId        String
-  actor          Actor    @relation(fields: [actorId], references: [id])
+  actor          Actor   @relation(fields: [actorId], references: [id])
   category       String
   modelFamily    String
   targetQuantity Int
@@ -296,42 +296,42 @@ model Front {
 }
 
 model MapPreset {
-  id              String   @id @default(uuid())
-  key             String   @unique
-  name            String
-  description     String?
-  scope           String
-  startDate       String?
-  endDate         String?
-  accuracyLevel   String
-  sourceName      String?
-  sourceLicense   String?
-  sourceUrl       String?
-  attribution     String?
-  payload         Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(uuid())
+  key           String   @unique
+  name          String
+  description   String?
+  scope         String
+  startDate     String?
+  endDate       String?
+  accuracyLevel String
+  sourceName    String?
+  sourceLicense String?
+  sourceUrl     String?
+  attribution   String?
+  payload       Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   mapLayers   SessionMapLayer[]
   mapFeatures MapFeature[]
 }
 
 model SessionMapLayer {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id])
+  session     Session    @relation(fields: [sessionId], references: [id])
   mapPresetId String?
   mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
   layerType   String
   name        String
   visibility  String
   payload     Json?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model MapFeature {
-  id          String   @id @default(uuid())
+  id          String     @id @default(uuid())
   sessionId   String
   mapPresetId String?
   mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
@@ -345,6 +345,6 @@ model MapFeature {
   properties  Json?
   visibility  String
   confidence  String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
