@@ -34,12 +34,16 @@ model Session {
   equipmentGoals     EquipmentGoal[]
   fronts             Front[]
   mapLayers          SessionMapLayer[]
+  mapFeatures        MapFeature[]
+  provinces          Province[]
+  strategicZones     StrategicZone[]
+  infrastructureLinks InfrastructureLink[]
 }
 
 model Actor {
   id             String   @id @default(uuid())
   sessionId      String
-  session        Session  @relation(fields: [sessionId], references: [id])
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   name           String
   normalizedName String
   type           String
@@ -64,12 +68,16 @@ model Actor {
   attackerFronts     Front[]              @relation("AttackerActor")
   defenderFronts     Front[]              @relation("DefenderActor")
   mapFeatures        MapFeature[]
+  provincesControlled Province[]           @relation("ControllerActor")
+
+  @@index([sessionId])
+  @@index([actorCode])
 }
 
 model Relation {
   id            String   @id @default(uuid())
   sessionId     String
-  session       Session  @relation(fields: [sessionId], references: [id])
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorAId      String
   actorBId      String
   relationScore Int      @default(0)
@@ -83,12 +91,14 @@ model Relation {
   updatedAt     DateTime @updatedAt
 
   @@unique([sessionId, actorAId, actorBId])
+  @@index([sessionId])
+  @@index([visibility])
 }
 
 model Region {
   id                String   @id @default(uuid())
   sessionId         String
-  session           Session  @relation(fields: [sessionId], references: [id])
+  session           Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   name              String
   type              String
   controllerActorId String?
@@ -101,12 +111,66 @@ model Region {
   updatedAt         DateTime @updatedAt
 
   mapFeatures MapFeature[]
+  provinces   Province[]
+
+  @@index([sessionId])
+  @@index([visibility])
+  @@index([sessionId, visibility])
+}
+
+model Province {
+  id                String   @id @default(uuid())
+  sessionId         String
+  session           Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  regionId          String
+  region            Region   @relation(fields: [regionId], references: [id], onDelete: Cascade)
+  name              String
+  controllerActorId String?
+  controllerActor   Actor?   @relation("ControllerActor", fields: [controllerActorId], references: [id])
+  geometry          Json?
+  properties        Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([regionId])
+}
+
+model StrategicZone {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name        String
+  type        String
+  geometry    Json?
+  properties  Json?
+  visibility  String   @default("public")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sessionId])
+}
+
+model InfrastructureLink {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name        String
+  type        String
+  fromId      String
+  toId        String
+  properties  Json?
+  visibility  String   @default("public")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sessionId])
 }
 
 model Event {
   id              String   @id @default(uuid())
   sessionId       String
-  session         Session  @relation(fields: [sessionId], references: [id])
+  session         Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   turn            Int?
   date            String?
   title           String
@@ -125,14 +189,19 @@ model Event {
 
   mapChanges   MapChange[]
   intelReports IntelReport[]
+
+  @@index([sessionId])
+  @@index([actorId])
+  @@index([visibility])
+  @@index([sessionId, visibility])
 }
 
 model PendingAction {
   id           String   @id @default(uuid())
   sessionId    String
-  session      Session  @relation(fields: [sessionId], references: [id])
+  session      Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorId      String
-  actor        Actor    @relation(fields: [actorId], references: [id])
+  actor        Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
   actionType   String
   title        String
   description  String
@@ -144,14 +213,17 @@ model PendingAction {
   resolveAfter String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([actorId])
 }
 
 model SimulationCriteria {
   id            String   @id @default(uuid())
   sessionId     String
-  session       Session  @relation(fields: [sessionId], references: [id])
+  session       Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorId       String?
-  actor         Actor?   @relation(fields: [actorId], references: [id])
+  actor         Actor?   @relation(fields: [actorId], references: [id], onDelete: Cascade)
   scope         String
   key           String
   label         String
@@ -167,12 +239,15 @@ model SimulationCriteria {
   updatedAt     DateTime @updatedAt
 
   @@unique([sessionId, actorId, scope, key])
+  @@index([sessionId])
+  @@index([actorId])
+  @@index([visibility])
 }
 
 model MapChange {
   id         String   @id @default(uuid())
   sessionId  String
-  session    Session  @relation(fields: [sessionId], references: [id])
+  session    Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   eventId    String?
   event      Event?   @relation(fields: [eventId], references: [id])
   changeType String
@@ -181,45 +256,55 @@ model MapChange {
   payload    Json?
   visibility String
   createdAt  DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([visibility])
 }
 
 model DiplomacyMessage {
   id          String   @id @default(uuid())
   sessionId   String
-  session     Session  @relation(fields: [sessionId], references: [id])
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   fromActorId String
-  fromActor   Actor    @relation("FromActor", fields: [fromActorId], references: [id])
+  fromActor   Actor    @relation("FromActor", fields: [fromActorId], references: [id], onDelete: Cascade)
   toActorId   String
-  toActor     Actor    @relation("ToActor", fields: [toActorId], references: [id])
+  toActor     Actor    @relation("ToActor", fields: [toActorId], references: [id], onDelete: Cascade)
   message     String
   tone        String?
   visibility  String
   status      String
   createdAt   DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([fromActorId])
+  @@index([toActorId])
 }
 
 model IntelReport {
-  id                      String   @id @default(uuid())
-  sessionId               String
-  session                 Session  @relation(fields: [sessionId], references: [id])
-  actorId                 String
-  actor                   Actor    @relation(fields: [actorId], references: [id])
-  title                   String
-  confidence              String
-  sourceQuality           String?
-  description             String
+  id                     String   @id @default(uuid())
+  sessionId              String
+  session                Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  actorId                String
+  actor                  Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  title                  String
+  confidence             String
+  sourceQuality          String?
+  description            String
   possibleInterpretations Json?
-  linkedEventId           String?
-  linkedEvent             Event?   @relation(fields: [linkedEventId], references: [id])
-  createdAt               DateTime @default(now())
+  linkedEventId          String?
+  linkedEvent            Event?   @relation(fields: [linkedEventId], references: [id])
+  createdAt              DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([actorId])
 }
 
 model Project {
   id                String   @id @default(uuid())
   sessionId         String
-  session           Session  @relation(fields: [sessionId], references: [id])
+  session           Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorId           String
-  actor             Actor    @relation(fields: [actorId], references: [id])
+  actor             Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
   name              String
   category          String
   status            String
@@ -230,33 +315,39 @@ model Project {
   payload           Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([actorId])
 }
 
 model EquipmentAsset {
-  id                    String  @id @default(uuid())
+  id                    String   @id @default(uuid())
   sessionId             String
-  session               Session @relation(fields: [sessionId], references: [id])
+  session               Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorId               String
-  actor                 Actor   @relation(fields: [actorId], references: [id])
+  actor                 Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
   category              String
   modelName             String?
   modelFamily           String
-  quantity              Int     @default(0)
-  readiness             Int     @default(50)
+  quantity              Int      @default(0)
+  readiness             Int      @default(50)
   qualityLevel          String?
-  obsoleteLevel         Int     @default(0)
+  obsoleteLevel         Int      @default(0)
   yearIntroduced        Int?
   historicalBaselineMin Int?
   historicalBaselineMax Int?
   notes                 String?
+
+  @@index([sessionId])
+  @@index([actorId])
 }
 
 model EquipmentGoal {
-  id             String  @id @default(uuid())
+  id             String   @id @default(uuid())
   sessionId      String
-  session        Session @relation(fields: [sessionId], references: [id])
+  session        Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   actorId        String
-  actor          Actor   @relation(fields: [actorId], references: [id])
+  actor          Actor    @relation(fields: [actorId], references: [id], onDelete: Cascade)
   category       String
   modelFamily    String
   targetQuantity Int
@@ -265,12 +356,15 @@ model EquipmentGoal {
   industrialCost String?
   status         String
   createdTurn    Int
+
+  @@index([sessionId])
+  @@index([actorId])
 }
 
 model Front {
   id                String   @id @default(uuid())
   sessionId         String
-  session           Session  @relation(fields: [sessionId], references: [id])
+  session           Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   name              String
   type              String
   status            String
@@ -293,46 +387,53 @@ model Front {
   payload           Json?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([visibility])
 }
 
 model MapPreset {
-  id            String   @id @default(uuid())
-  key           String   @unique
-  name          String
-  description   String?
-  scope         String
-  startDate     String?
-  endDate       String?
-  accuracyLevel String
-  sourceName    String?
-  sourceLicense String?
-  sourceUrl     String?
-  attribution   String?
-  payload       Json?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(uuid())
+  key             String   @unique
+  name            String
+  description     String?
+  scope           String
+  startDate       String?
+  endDate         String?
+  accuracyLevel   String
+  sourceName      String?
+  sourceLicense   String?
+  sourceUrl       String?
+  attribution     String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   mapLayers   SessionMapLayer[]
   mapFeatures MapFeature[]
 }
 
 model SessionMapLayer {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   sessionId   String
-  session     Session    @relation(fields: [sessionId], references: [id])
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   mapPresetId String?
   mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
   layerType   String
   name        String
   visibility  String
   payload     Json?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([visibility])
 }
 
 model MapFeature {
-  id          String     @id @default(uuid())
+  id          String   @id @default(uuid())
   sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   mapPresetId String?
   mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
   actorId     String?
@@ -345,6 +446,9 @@ model MapFeature {
   properties  Json?
   visibility  String
   confidence  String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([visibility])
 }

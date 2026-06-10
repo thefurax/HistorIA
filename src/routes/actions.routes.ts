@@ -28,4 +28,16 @@ export default async function (fastify: FastifyInstance) {
     const { sessionId, actorId } = request.params as any;
     return actionsService.getPendingActions(sessionId, actorId);
   });
+
+  fastify.post('/sessions/:sessionId/actors/:actorId/actions/validate', {
+    schema: {
+      operationId: 'validateAction',
+      params: { sessionId: { type: 'string' }, actorId: { type: 'string' } },
+      body: { type: 'object' },
+      security: [{ bearerAuth: [] }],
+    }
+  }, async (request) => {
+    const { sessionId, actorId } = request.params as any;
+    return actionsService.validateAction(sessionId, actorId, request.body);
+  });
 }

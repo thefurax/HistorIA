@@ -13,3 +13,8 @@ export const PendingActionSchema = z.object({
 export const AddPendingActionsSchema = z.object({
   actions: z.array(PendingActionSchema),
 });
+
+export const ValidateActionSchema = z.object({
+  rawUserRequest: z.string(),
+  interpretedAction: z.any(),
+});

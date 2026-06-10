@@ -42,20 +42,93 @@ async function main() {
     });
   }
 
+  // Regions
+  const regionsData = [
+    'Germany', 'France', 'United Kingdom', 'Soviet Union', 'Italy', 'Poland',
+    'Republican Spain', 'Nationalist Spain', 'Contested Spain'
+  ];
+
+  const regions: any = {};
+  for (const name of regionsData) {
+    let controllerActorId = null;
+    if (name === 'Republican Spain') controllerActorId = actors['Spanish Republicans'].id;
+    if (name === 'Nationalist Spain') controllerActorId = actors['Spanish Nationalists'].id;
+    if (actors[name]) controllerActorId = actors[name].id;
+
+    regions[name] = await prisma.region.create({
+      data: {
+        sessionId: session.id,
+        name,
+        type: 'sovereign_territory',
+        status: 'controlled',
+        visibility: 'public',
+        controllerActorId,
+      }
+    });
+  }
+
   // Relations
-  await prisma.relation.upsert({
-    where: { sessionId_actorAId_actorBId: { sessionId: session.id, actorAId: actors['Spanish Republicans'].id, actorBId: actors['Spanish Nationalists'].id } },
-    update: {},
-    create: {
+  const relations = [
+    { a: 'Germany', b: 'France', tension: 80, score: -50 },
+    { a: 'France', b: 'United Kingdom', tension: 10, score: 70 },
+    { a: 'Germany', b: 'Poland', tension: 60, score: -30 },
+    { a: 'Germany', b: 'Soviet Union', tension: 70, score: -60 },
+    { a: 'Spanish Republicans', b: 'Spanish Nationalists', tension: 100, score: -100, atWar: true },
+  ];
+
+  for (const r of relations) {
+    await prisma.relation.upsert({
+      where: { sessionId_actorAId_actorBId: { sessionId: session.id, actorAId: actors[r.a].id, actorBId: actors[r.b].id } },
+      update: {},
+      create: {
+        sessionId: session.id,
+        actorAId: actors[r.a].id,
+        actorBId: actors[r.b].id,
+        atWar: r.atWar || false,
+        tension: r.tension,
+        relationScore: r.score,
+        visibility: 'public',
+      }
+    });
+  }
+
+  // Fronts
+  await prisma.front.create({
+    data: {
       sessionId: session.id,
-      actorAId: actors['Spanish Republicans'].id,
-      actorBId: actors['Spanish Nationalists'].id,
-      atWar: true,
-      tension: 100,
-      relationScore: -100,
+      name: 'Spanish Civil War Front',
+      type: 'civil_war_front',
+      status: 'active',
+      attackerActorId: actors['Spanish Nationalists'].id,
+      defenderActorId: actors['Spanish Republicans'].id,
       visibility: 'public',
     }
   });
+
+  // Criteria
+  const criteria = [
+    { actor: 'France', key: 'doctrine_flexibility', label: 'Doctrine Flexibility', type: 'numeric', value: 30 },
+    { actor: 'France', key: 'army_radiofication_level', label: 'Army Radiofication Level', type: 'numeric', value: 20 },
+    { actor: 'Germany', key: 'rearmament_pressure', label: 'Rearmament Pressure', type: 'numeric', value: 80 },
+    { actor: 'Spanish Republicans', key: 'republican_legitimacy', label: 'Republican Legitimacy', type: 'numeric', value: 60 },
+    { actor: 'Spanish Nationalists', key: 'nationalist_military_cohesion', label: 'Nationalist Military Cohesion', type: 'numeric', value: 75 },
+  ];
+
+  for (const c of criteria) {
+    await prisma.simulationCriteria.create({
+      data: {
+        sessionId: session.id,
+        actorId: actors[c.actor].id,
+        scope: 'actor',
+        key: c.key,
+        label: c.label,
+        type: c.type,
+        value: c.value,
+        visibility: 'player_private',
+        createdBy: 'seed',
+      }
+    });
+  }
 
   // Events
   await prisma.event.create({

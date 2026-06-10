@@ -1,4 +1,4 @@
-import { Event, MapChange, Region, Front, MapFeature } from '@prisma/client';
+import { Event, MapChange, Region, Front, MapFeature, SimulationCriteria } from '@prisma/client';
 
 export const isVisibilityPublic = (visibility: string): boolean => {
   return visibility === 'public' || visibility === 'advisor_known';
@@ -9,7 +9,7 @@ export const canActorSeeEvent = (event: Partial<Event>, actorId: string): boolea
   if (!v) return false;
   if (isVisibilityPublic(v)) return true;
   if (v === `actor:${actorId}`) return true;
-  if (v === 'player_private' || v === 'intelligence_report') return event.actorId === actorId;
+  if (v === 'player_private' || v === 'intelligence_report' || v === 'foreign_private') return event.actorId === actorId;
   return false;
 };
 
@@ -40,8 +40,9 @@ export const canActorSeeMapFeature = (feature: Partial<MapFeature>, actorId: str
   return false;
 };
 
-export const canActorSeeCriteria = (criteria: { visibility: string; actorId?: string | null }, actorId: string): boolean => {
+export const canActorSeeCriteria = (criteria: Partial<SimulationCriteria>, actorId: string): boolean => {
   const v = criteria.visibility;
+  if (!v) return false;
   if (isVisibilityPublic(v)) return true;
   if (v === `actor:${actorId}`) return true;
   if (v === 'player_private') return criteria.actorId === actorId;
