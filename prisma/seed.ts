@@ -5,11 +5,18 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding HistorIA Europe 1936 scenario...');
 
-  const session = await prisma.session.upsert({
-    where: { joinCode: 'HIA-1936' },
-    update: {},
-    create: {
-      joinCode: 'HIA-1936',
+  const joinCode = 'HIA-1936';
+
+  // Clean existing session data
+  const existingSession = await prisma.session.findUnique({ where: { joinCode } });
+  if (existingSession) {
+    await prisma.session.delete({ where: { id: existingSession.id } });
+    console.log('Cleaned existing session.');
+  }
+
+  const session = await prisma.session.create({
+    data: {
+      joinCode,
       title: 'Europe 1936 — Démonstration HistorIA',
       scenarioType: 'europe_1936',
       currentDate: '1936-01-01',
@@ -31,10 +38,8 @@ async function main() {
 
   const actors: any = {};
   for (const a of actorsData) {
-    actors[a.name] = await prisma.actor.upsert({
-      where: { actorCode: a.actorCode },
-      update: { sessionId: session.id },
-      create: {
+    actors[a.name] = await prisma.actor.create({
+      data: {
         ...a,
         sessionId: session.id,
         normalizedName: a.name.toLowerCase().replace(/\s+/g, '_'),
@@ -87,10 +92,8 @@ async function main() {
   ];
 
   for (const r of relations) {
-    await prisma.relation.upsert({
-      where: { sessionId_actorAId_actorBId: { sessionId: session.id, actorAId: actors[r.a].id, actorBId: actors[r.b].id } },
-      update: {},
-      create: {
+    await prisma.relation.create({
+      data: {
         sessionId: session.id,
         actorAId: actors[r.a].id,
         actorBId: actors[r.b].id,
