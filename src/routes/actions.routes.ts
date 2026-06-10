@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { ActionsService } from '../services/actions.service';
-import { AddPendingActionsSchema } from '../schemas/actions.schemas';
+import { AddPendingActionsSchema, ValidateActionSchema } from '../schemas/actions.schemas';
 
 const actionsService = new ActionsService();
 
@@ -33,7 +33,7 @@ export default async function (fastify: FastifyInstance) {
     schema: {
       operationId: 'validateAction',
       params: { sessionId: { type: 'string' }, actorId: { type: 'string' } },
-      body: { type: 'object' },
+      body: ValidateActionSchema,
       security: [{ bearerAuth: [] }],
     }
   }, async (request) => {

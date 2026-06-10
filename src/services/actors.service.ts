@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { NotFoundError } from '../utils/errors';
 
-const prisma = new PrismaClient();
 
 export class ActorsService {
   async createActor(sessionId: string, data: any) {

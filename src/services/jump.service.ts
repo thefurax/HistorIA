@@ -1,11 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { EventsService } from './events.service';
 import { CriteriaService } from './criteria.service';
 import { MapService } from './map.service';
 import { FrontsService } from './fronts.service';
 import { AdvisorService } from './advisor.service';
 
-const prisma = new PrismaClient();
 
 export class JumpService {
   private eventsService = new EventsService();

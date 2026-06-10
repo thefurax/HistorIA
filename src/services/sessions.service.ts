@@ -1,9 +1,8 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import { generateJoinCode } from '../utils/joinCode';
 import { NotFoundError } from '../utils/errors';
 import { PUBLIC_MAP_BASE_URL } from '../config';
 
-const prisma = new PrismaClient();
 
 export class SessionsService {
   async createSession(data: any) {

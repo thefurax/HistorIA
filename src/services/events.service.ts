@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/prisma';
 import * as visibilityService from './visibility.service';
 
-const prisma = new PrismaClient();
 
 export class EventsService {
   async createEvents(sessionId: string, events: any[]) {

@@ -14,6 +14,7 @@ import mapRoutes from './routes/map.routes';
 import jumpRoutes from './routes/jump.routes';
 import frontsRoutes from './routes/fronts.routes';
 import journalRoutes from './routes/journal.routes';
+import diplomacyRoutes from './routes/diplomacy.routes';
 import cors from '@fastify/cors';
 
 const app = fastify().withTypeProvider<ZodTypeProvider>();
@@ -42,6 +43,7 @@ app.register(mapRoutes, { prefix: '/gpt' });
 app.register(jumpRoutes, { prefix: '/gpt' });
 app.register(frontsRoutes, { prefix: '/gpt' });
 app.register(journalRoutes, { prefix: '/gpt' });
+app.register(diplomacyRoutes, { prefix: '/gpt' });
 
 app.setErrorHandler((error, request, reply) => {
   if (error.statusCode) {

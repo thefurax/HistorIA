@@ -42,6 +42,15 @@ async function main() {
     });
   }
 
+  // Simplified Geometries (GeoJSON)
+  const geometries: Record<string, any> = {
+    'Germany': { type: 'Polygon', coordinates: [[[5, 47], [15, 47], [15, 55], [5, 55], [5, 47]]] },
+    'France': { type: 'Polygon', coordinates: [[[-5, 42], [8, 42], [8, 51], [-5, 51], [-5, 42]]] },
+    'United Kingdom': { type: 'Polygon', coordinates: [[[-8, 50], [2, 50], [2, 60], [-8, 60], [-8, 50]]] },
+    'Republican Spain': { type: 'Polygon', coordinates: [[[-9, 36], [-1, 36], [-1, 43], [-9, 43], [-9, 36]]] },
+    'Nationalist Spain': { type: 'Polygon', coordinates: [[[-1, 36], [4, 36], [4, 43], [-1, 43], [-1, 36]]] },
+  };
+
   // Regions
   const regionsData = [
     'Germany', 'France', 'United Kingdom', 'Soviet Union', 'Italy', 'Poland',
@@ -63,6 +72,7 @@ async function main() {
         status: 'controlled',
         visibility: 'public',
         controllerActorId,
+        geometry: geometries[name] || null,
       }
     });
   }
@@ -102,6 +112,7 @@ async function main() {
       attackerActorId: actors['Spanish Nationalists'].id,
       defenderActorId: actors['Spanish Republicans'].id,
       visibility: 'public',
+      geometry: { type: 'LineString', coordinates: [[-1, 36], [-1, 43]] },
     }
   });
 
