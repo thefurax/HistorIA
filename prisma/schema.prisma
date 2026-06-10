@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  joinCode     String   @unique
+  title        String
+  scenarioType String
+  startDate    String?
+  currentDate  String
+  currentTurn  Int      @default(1)
+  realismMode  String
+  mapUrl       String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  actors             Actor[]
+  relations          Relation[]
+  regions            Region[]
+  events             Event[]
+  pendingActions     PendingAction[]
+  simulationCriteria SimulationCriteria[]
+  mapChanges         MapChange[]
+  diplomacyMessages  DiplomacyMessage[]
+  intelReports       IntelReport[]
+  projects           Project[]
+  equipmentAssets    EquipmentAsset[]
+  equipmentGoals     EquipmentGoal[]
+  fronts             Front[]
+  mapLayers          SessionMapLayer[]
+}
+
+model Actor {
+  id             String   @id @default(uuid())
+  sessionId      String
+  session        Session  @relation(fields: [sessionId], references: [id])
+  name           String
+  normalizedName String
+  type           String
+  isPlayer       Boolean  @default(false)
+  actorCode      String?  @unique
+  governmentType String?
+  color          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  regions            Region[]
+  events             Event[]
+  targetEvents       Event[]              @relation("TargetActor")
+  pendingActions     PendingAction[]
+  simulationCriteria SimulationCriteria[]
+  diplomacySent      DiplomacyMessage[]   @relation("FromActor")
+  diplomacyReceived  DiplomacyMessage[]   @relation("ToActor")
+  intelReports       IntelReport[]
+  projects           Project[]
+  equipmentAssets    EquipmentAsset[]
+  equipmentGoals     EquipmentGoal[]
+  attackerFronts     Front[]              @relation("AttackerActor")
+  defenderFronts     Front[]              @relation("DefenderActor")
+  mapFeatures        MapFeature[]
+}
+
+model Relation {
+  id            String   @id @default(uuid())
+  sessionId     String
+  session       Session  @relation(fields: [sessionId], references: [id])
+  actorAId      String
+  actorBId      String
+  relationScore Int      @default(0)
+  trust         Int      @default(50)
+  tension       Int      @default(50)
+  alignment     String?
+  atWar         Boolean  @default(false)
+  visibility    String   @default("public")
+  payload       Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([sessionId, actorAId, actorBId])
+}
+
+model Region {
+  id                String   @id @default(uuid())
+  sessionId         String
+  session           Session  @relation(fields: [sessionId], references: [id])
+  name              String
+  type              String
+  controllerActorId String?
+  controllerActor   Actor?   @relation(fields: [controllerActorId], references: [id])
+  status            String
+  geometry          Json?
+  properties        Json?
+  visibility        String   @default("public")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  mapFeatures MapFeature[]
+}
+
+model Event {
+  id              String   @id @default(uuid())
+  sessionId       String
+  session         Session  @relation(fields: [sessionId], references: [id])
+  turn            Int?
+  date            String?
+  title           String
+  eventType       String
+  description     String
+  visibility      String
+  actorId         String?
+  actor           Actor?   @relation(fields: [actorId], references: [id])
+  targetActorId   String?
+  targetActor     Actor?   @relation("TargetActor", fields: [targetActorId], references: [id])
+  affectedRegions Json?
+  payload         Json?
+  publicSummary   String?
+  privateSummary  String?
+  createdAt       DateTime @default(now())
+
+  mapChanges   MapChange[]
+  intelReports IntelReport[]
+}
+
+model PendingAction {
+  id           String   @id @default(uuid())
+  sessionId    String
+  session      Session  @relation(fields: [sessionId], references: [id])
+  actorId      String
+  actor        Actor    @relation(fields: [actorId], references: [id])
+  actionType   String
+  title        String
+  description  String
+  intent       String?
+  payload      Json?
+  status       String
+  visibility   String
+  createdTurn  Int
+  resolveAfter String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SimulationCriteria {
+  id            String   @id @default(uuid())
+  sessionId     String
+  session       Session  @relation(fields: [sessionId], references: [id])
+  actorId       String?
+  actor         Actor?   @relation(fields: [actorId], references: [id])
+  scope         String
+  key           String
+  label         String
+  type          String
+  value         Json
+  minValue      Int?
+  maxValue      Int?
+  visibility    String
+  createdBy     String
+  sourceEventId String?
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([sessionId, actorId, scope, key])
+}
+
+model MapChange {
+  id         String   @id @default(uuid())
+  sessionId  String
+  session    Session  @relation(fields: [sessionId], references: [id])
+  eventId    String?
+  event      Event?   @relation(fields: [eventId], references: [id])
+  changeType String
+  targetType String
+  targetId   String?
+  payload    Json?
+  visibility String
+  createdAt  DateTime @default(now())
+}
+
+model DiplomacyMessage {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id])
+  fromActorId String
+  fromActor   Actor    @relation("FromActor", fields: [fromActorId], references: [id])
+  toActorId   String
+  toActor     Actor    @relation("ToActor", fields: [toActorId], references: [id])
+  message     String
+  tone        String?
+  visibility  String
+  status      String
+  createdAt   DateTime @default(now())
+}
+
+model IntelReport {
+  id                     String   @id @default(uuid())
+  sessionId              String
+  session                Session  @relation(fields: [sessionId], references: [id])
+  actorId                String
+  actor                  Actor    @relation(fields: [actorId], references: [id])
+  title                  String
+  confidence             String
+  sourceQuality          String?
+  description            String
+  possibleInterpretations Json?
+  linkedEventId          String?
+  linkedEvent            Event?   @relation(fields: [linkedEventId], references: [id])
+  createdAt              DateTime @default(now())
+}
+
+model Project {
+  id                String   @id @default(uuid())
+  sessionId         String
+  session           Session  @relation(fields: [sessionId], references: [id])
+  actorId           String
+  actor             Actor    @relation(fields: [actorId], references: [id])
+  name              String
+  category          String
+  status            String
+  priority          String?
+  secrecyLevel      String?
+  plausibilityLevel String?
+  progress          Int      @default(0)
+  payload           Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model EquipmentAsset {
+  id                    String   @id @default(uuid())
+  sessionId             String
+  session               Session  @relation(fields: [sessionId], references: [id])
+  actorId               String
+  actor                 Actor    @relation(fields: [actorId], references: [id])
+  category              String
+  modelName             String?
+  modelFamily           String
+  quantity              Int      @default(0)
+  readiness             Int      @default(50)
+  qualityLevel          String?
+  obsoleteLevel         Int      @default(0)
+  yearIntroduced        Int?
+  historicalBaselineMin Int?
+  historicalBaselineMax Int?
+  notes                 String?
+}
+
+model EquipmentGoal {
+  id             String   @id @default(uuid())
+  sessionId      String
+  session        Session  @relation(fields: [sessionId], references: [id])
+  actorId        String
+  actor          Actor    @relation(fields: [actorId], references: [id])
+  category       String
+  modelFamily    String
+  targetQuantity Int
+  deadlineDate   String?
+  priority       String?
+  industrialCost String?
+  status         String
+  createdTurn    Int
+}
+
+model Front {
+  id                String   @id @default(uuid())
+  sessionId         String
+  session           Session  @relation(fields: [sessionId], references: [id])
+  name              String
+  type              String
+  status            String
+  attackerActorId   String?
+  attackerActor     Actor?   @relation("AttackerActor", fields: [attackerActorId], references: [id])
+  defenderActorId   String?
+  defenderActor     Actor?   @relation("DefenderActor", fields: [defenderActorId], references: [id])
+  regionIds         Json?
+  geometry          Json?
+  strengthAttacker  Int?
+  strengthDefender  Int?
+  logisticsAttacker Int?
+  logisticsDefender Int?
+  moraleAttacker    Int?
+  moraleDefender    Int?
+  terrainDifficulty Int?
+  intensity         Int?
+  momentum          String?
+  visibility        String
+  payload           Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model MapPreset {
+  id              String   @id @default(uuid())
+  key             String   @unique
+  name            String
+  description     String?
+  scope           String
+  startDate       String?
+  endDate         String?
+  accuracyLevel   String
+  sourceName      String?
+  sourceLicense   String?
+  sourceUrl       String?
+  attribution     String?
+  payload         Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  mapLayers   SessionMapLayer[]
+  mapFeatures MapFeature[]
+}
+
+model SessionMapLayer {
+  id          String   @id @default(uuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id])
+  mapPresetId String?
+  mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
+  layerType   String
+  name        String
+  visibility  String
+  payload     Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MapFeature {
+  id          String   @id @default(uuid())
+  sessionId   String
+  mapPresetId String?
+  mapPreset   MapPreset? @relation(fields: [mapPresetId], references: [id])
+  actorId     String?
+  actor       Actor?     @relation(fields: [actorId], references: [id])
+  regionId    String?
+  region      Region?    @relation(fields: [regionId], references: [id])
+  featureType String
+  name        String
+  geometry    Json?
+  properties  Json?
+  visibility  String
+  confidence  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
